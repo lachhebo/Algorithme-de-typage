@@ -2,9 +2,7 @@ type  terme = X of int | F1 of terme | F2 of terme | F3 of terme
               | T | G1 of terme * terme | G2 of terme * terme
               | H1 of terme * terme * terme
               | H2 of terme * terme * terme
-              | A1
-              | A2
-              | A3;;
+              | A1 | A2 | A3;;
 
 
 let rec concat_2 l1 l2 =
@@ -12,7 +10,6 @@ let rec concat_2 l1 l2 =
 	| [] -> l2
 	| x1::ll1 -> x1::(concat_2 ll1 l2)
 ;;
-
 
 let concat_3 l1 l2 l3 =  concat_2 (concat_2 l1 l2) l3 ;;
 
@@ -195,3 +192,40 @@ unification ( G1( F1(X(1)),X(3)) ) ( G1(F1(X(3)),A2) );;
 
 La foncton marche parfatement à mes yeux.
 *)
+
+(* Fonctions permettant l'anti-unification
+L'algorithme d'anti-unification permet d'obtenir, à partir de 2 termes, une 3è terme consistant en une generalisation des 2 termes initiaux
+*)
+
+let rec presence_pile a mylist =
+  match mylist with
+  | []          -> T
+  | ((x1,x2), z)::q  -> let (a1,a2) = a in
+                        if x1==a1 || x2==a2 then z else presence_pile a q
+;;
+
+let rec empiler elem pile = elem::pile;;
+
+let rec antiunification terme_1 terme_2 =
+    (au terme_1 terme_2 [])
+;;
+
+let rec au terme_1 terme_2 p =
+    match (terme_1, terme_2) with
+    |  (t1, t2) when t1 = t2                        -> t1
+    |  (X(x), X(a))                                 -> T
+    |  (F1(m), F1(z))                               -> F1((au m z p))
+    |  (F2(m), F2(z))                               -> F2((au m z p))
+    |  (F3(m), F3(z))                               -> F3((au m z p))
+    |  (G1(m1, m2),G1(z1,z2))                       -> G1((au m1 z1 p),(au m2 z2 p))
+    |  (G2(m1, m2),G2(z1, z2))                      -> G2((au m1 z1 p),(au m2 z2 p))
+    |  (H1(m1, m2, m3),H1(z1, z2, z3))              -> H1((au m1 z1 p),(au m2 z2 p),(au m3 z3 p))
+    |  (H2(m1, m2, m3),H2(z1, z2, z3))              -> H2((au m1 z1 p),(au m2 z2 p),(au m3 z3 p))
+    |  (t1, t2)                                     -> let z1 =  (presence_pile (t1,t2) p) in
+                                                       if (z1 == T) then a
+                                                       else z1
+;;
+
+(*
+antiunification (G1(F1(A2),A1)) (G1(F1(A1),T));;
+ *)
